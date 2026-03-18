@@ -1,0 +1,1430 @@
+
+<!DOCTYPE html>
+
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Snowevents Quiz</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+width: 100%; height: 100%;
+background: #0b2545;
+color: #fff;
+font-family: ‘Montserrat’, sans-serif;
+overflow: hidden;
+}
+
+/* ── APP SHELL ─────────────────────────────── */
+#app {
+position: fixed;
+top: 0; left: 0; right: 0; bottom: 0;
+display: flex;
+flex-direction: column;
+}
+
+/* ── BACKGROUND ─────────────────────────────── */
+#bg {
+position: fixed;
+top: 0; left: 0; right: 0; bottom: 0;
+z-index: 0;
+background: linear-gradient(150deg, #060f1e 0%, #0b2545 50%, #1565c0 100%);
+overflow: hidden;
+}
+#bg-mountains {
+position: absolute;
+bottom: 0; left: 0; right: 0;
+height: 45%;
+}
+#bg-mountains svg { width: 100%; height: 100%; display: block; }
+#bg-snow { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; }
+.flake {
+position: absolute; top: -20px; color: rgba(255,255,255,.7);
+animation: fall linear infinite;
+}
+@keyframes fall {
+from { transform: translateY(0); opacity: 0.7; }
+to   { transform: translateY(110vh); opacity: 0; }
+}
+
+/* ── SCREENS ─────────────────────────────────
+All screens sit on top of bg, positioned absolute,
+shown/hidden with display none/flex
+──────────────────────────────────────────── */
+.screen {
+display: none;
+position: absolute;
+top: 0; left: 0; right: 0; bottom: 0;
+z-index: 1;
+}
+.screen.active { display: flex; }
+
+/* ════════════════════════════════════════════
+LOGO COMPONENT
+════════════════════════════════════════════ */
+.logo {
+display: inline-flex;
+align-items: center;
+gap: 8px;
+}
+.logo-icon {
+width: 32px; height: 32px;
+background: #00b4d8;
+border-radius: 7px;
+display: flex; align-items: center; justify-content: center;
+flex-shrink: 0;
+box-shadow: 0 2px 10px rgba(0,180,216,.5);
+}
+.logo-icon svg { width: 20px; height: 20px; }
+.logo-text { line-height: 1; }
+.logo-text .t1 { font-weight: 900; font-size: 14px; letter-spacing: 1.5px; color: #fff; }
+.logo-text .t1 span { color: #00b4d8; }
+.logo-text .t2 { font-size: 7px; letter-spacing: 2px; color: rgba(255,255,255,.4); }
+
+/* ════════════════════════════════════════════
+WELCOME SCREEN
+flex-direction: column, centered
+════════════════════════════════════════════ */
+#s-welcome {
+flex-direction: column;
+align-items: center;
+justify-content: center;
+gap: 10px;
+padding: 20px;
+}
+#s-welcome h1 {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 64px;
+letter-spacing: 6px;
+color: #fff;
+line-height: 1;
+text-align: center;
+}
+#s-welcome h1 span { color: #00b4d8; }
+#s-welcome p {
+font-size: 10px; letter-spacing: 3px;
+color: rgba(255,255,255,.4);
+text-transform: uppercase;
+}
+.round-cards {
+display: flex; gap: 10px;
+}
+.round-card {
+background: rgba(255,255,255,.07);
+border: 1px solid rgba(0,180,216,.3);
+border-radius: 8px;
+padding: 10px 18px;
+text-align: center;
+min-width: 90px;
+}
+.round-card .num { font-family: ‘Bebas Neue’, sans-serif; font-size: 32px; color: #00b4d8; line-height: 1; }
+.round-card .lbl { font-size: 8px; letter-spacing: 1px; color: rgba(255,255,255,.5); }
+
+/* ════════════════════════════════════════════
+SETUP SCREEN  ← THE PROBLEMATIC ONE
+Simple approach: 2-column absolute layout
+LEFT: fixed 220px width, 4 rows stacked
+RIGHT: fills the rest, scrollable list
+════════════════════════════════════════════ */
+#s-setup {
+flex-direction: row;
+padding: 12px 16px;
+gap: 16px;
+}
+
+/* Left column — hard fixed sizes, nothing can overflow */
+#setup-left {
+width: 220px;
+flex-shrink: 0;
+display: flex;
+flex-direction: column;
+gap: 0;
+}
+#setup-left .sl-title {
+font-weight: 900;
+font-size: 13px;
+letter-spacing: 1px;
+text-transform: uppercase;
+color: #00b4d8;
+height: 28px;
+display: flex; align-items: center;
+}
+#setup-left .sl-hint {
+font-size: 9px;
+color: rgba(255,255,255,.35);
+height: 20px;
+display: flex; align-items: center;
+}
+#setup-left .sl-input-row {
+display: flex;
+gap: 6px;
+height: 40px;
+margin-top: 4px;
+}
+#setup-left .sl-input-row input {
+flex: 1;
+height: 40px;
+background: rgba(255,255,255,.1);
+border: 1.5px solid rgba(0,180,216,.4);
+border-radius: 6px;
+padding: 0 12px;
+color: #fff;
+font-family: ‘Montserrat’, sans-serif;
+font-size: 13px;
+font-weight: 600;
+outline: none;
+}
+#setup-left .sl-input-row input:focus { border-color: #00b4d8; }
+#setup-left .sl-input-row input::placeholder { color: rgba(255,255,255,.25); }
+#setup-left .sl-input-row button {
+width: 40px; height: 40px;
+background: #00b4d8;
+color: #0b2545;
+border: none; border-radius: 6px;
+font-size: 24px; font-weight: 900;
+cursor: pointer;
+display: flex; align-items: center; justify-content: center;
+flex-shrink: 0;
+}
+#setup-left .sl-footer {
+display: flex;
+align-items: center;
+justify-content: space-between;
+height: 40px;
+margin-top: 8px;
+}
+#setup-left .sl-footer .count {
+font-size: 10px;
+color: rgba(255,255,255,.35);
+letter-spacing: 1px;
+}
+#btn-start {
+background: #00b4d8;
+color: #0b2545;
+border: none;
+border-radius: 6px;
+padding: 0 18px;
+height: 36px;
+font-family: ‘Montserrat’, sans-serif;
+font-size: 12px;
+font-weight: 900;
+letter-spacing: 1px;
+text-transform: uppercase;
+cursor: pointer;
+}
+#btn-start:disabled {
+opacity: 0.3;
+cursor: default;
+}
+
+/* Right column — fills remaining space */
+#setup-right {
+flex: 1;
+display: flex;
+flex-direction: column;
+gap: 6px;
+overflow: hidden;
+min-width: 0;
+}
+#setup-right .sr-title {
+font-size: 9px;
+letter-spacing: 2px;
+text-transform: uppercase;
+color: rgba(255,255,255,.35);
+flex-shrink: 0;
+height: 20px;
+display: flex; align-items: center;
+}
+#player-list {
+flex: 1;
+overflow-y: auto;
+display: flex;
+flex-direction: column;
+gap: 5px;
+}
+#player-list::-webkit-scrollbar { width: 3px; }
+#player-list::-webkit-scrollbar-thumb { background: rgba(0,180,216,.3); border-radius: 2px; }
+.pchip {
+display: flex;
+align-items: center;
+gap: 8px;
+background: rgba(255,255,255,.07);
+border: 1px solid rgba(0,180,216,.2);
+border-radius: 7px;
+padding: 7px 10px;
+flex-shrink: 0;
+}
+.pchip .av {
+width: 26px; height: 26px;
+border-radius: 50%;
+display: flex; align-items: center; justify-content: center;
+font-weight: 900; font-size: 12px; color: #fff;
+flex-shrink: 0;
+}
+.pchip .nm { flex: 1; font-weight: 700; font-size: 12px; }
+.pchip .del {
+background: none; border: none; cursor: pointer;
+color: rgba(231,76,60,.6); font-size: 16px;
+width: 28px; height: 28px;
+display: flex; align-items: center; justify-content: center;
+}
+.pchip .del:hover { color: #e74c3c; }
+
+/* ════════════════════════════════════════════
+ROUND INTRO SCREEN
+════════════════════════════════════════════ */
+#s-intro {
+flex-direction: column;
+align-items: center;
+justify-content: center;
+gap: 6px;
+padding: 20px;
+}
+#s-intro .big-num {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 100px;
+color: #00b4d8;
+line-height: 1;
+filter: drop-shadow(0 0 30px rgba(0,180,216,.5));
+}
+#s-intro .round-title {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 32px;
+letter-spacing: 4px;
+}
+#s-intro .round-desc {
+font-size: 11px;
+color: rgba(255,255,255,.4);
+letter-spacing: 1px;
+}
+
+/* ════════════════════════════════════════════
+QUIZ SCREEN
+Layout (landscape):
+┌──────────────────────────────────────────┐
+│ TOPBAR: logo | progress | turn | timer   │  ~44px
+├─────────────────────┬────────────────────┤
+│ QUESTION            │ ANSWERS            │  flex:1
+├──────────────────────────────────────────┤
+│ PLAYER STRIP                             │  56px
+└──────────────────────────────────────────┘
+════════════════════════════════════════════ */
+#s-quiz {
+flex-direction: column;
+}
+
+/* Topbar */
+#quiz-bar {
+display: flex;
+align-items: center;
+gap: 10px;
+padding: 6px 12px;
+background: rgba(6,15,30,.5);
+border-bottom: 1px solid rgba(0,180,216,.15);
+flex-shrink: 0;
+height: 44px;
+}
+#quiz-progress {
+flex: 1;
+min-width: 0;
+}
+#quiz-progress .pr-labels {
+display: flex;
+justify-content: space-between;
+font-size: 8px;
+letter-spacing: 1px;
+color: rgba(255,255,255,.35);
+margin-bottom: 3px;
+}
+#quiz-progress .pr-track {
+height: 3px;
+background: rgba(255,255,255,.1);
+border-radius: 2px;
+overflow: hidden;
+}
+#quiz-progress .pr-fill {
+height: 100%;
+background: linear-gradient(90deg, #00b4d8, #2ecc71);
+border-radius: 2px;
+transition: width .4s ease;
+}
+#turn-badge {
+display: flex;
+align-items: center;
+gap: 6px;
+background: rgba(0,180,216,.12);
+border: 1px solid rgba(0,180,216,.3);
+border-radius: 6px;
+padding: 4px 10px;
+flex-shrink: 0;
+max-width: 150px;
+overflow: hidden;
+}
+#turn-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+#turn-name { font-weight: 800; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#turn-sub { font-size: 7px; color: rgba(255,255,255,.35); white-space: nowrap; }
+
+/* Timer */
+#timer-wrap {
+flex-shrink: 0;
+width: 36px;
+height: 36px;
+position: relative;
+display: flex; align-items: center; justify-content: center;
+}
+#timer-svg {
+position: absolute;
+top: 0; left: 0;
+width: 36px; height: 36px;
+transform: rotate(-90deg);
+}
+#timer-circle-bg {
+fill: none;
+stroke: rgba(255,255,255,.1);
+stroke-width: 3;
+}
+#timer-circle {
+fill: none;
+stroke: #00b4d8;
+stroke-width: 3;
+stroke-linecap: round;
+transition: stroke-dashoffset .9s linear, stroke .5s;
+}
+#timer-num {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 16px;
+color: #fff;
+position: relative;
+z-index: 1;
+line-height: 1;
+}
+
+/* Q+A area */
+#quiz-body {
+flex: 1;
+display: flex;
+gap: 8px;
+padding: 6px 10px 4px;
+min-height: 0;
+overflow: hidden;
+}
+
+/* Question panel */
+#q-panel {
+flex: 1;
+background: rgba(11,37,69,.85);
+border: 1px solid rgba(0,180,216,.2);
+border-radius: 10px;
+padding: 14px 16px;
+display: flex;
+flex-direction: column;
+justify-content: center;
+overflow: hidden;
+position: relative;
+transition: filter .5s;
+}
+#q-panel.blurred { filter: blur(6px); pointer-events: none; }
+#q-tag {
+font-size: 8px; letter-spacing: 3px; text-transform: uppercase;
+color: #00b4d8; margin-bottom: 8px; opacity: .8;
+}
+#q-text {
+font-size: clamp(13px, 2.4vw, 18px);
+font-weight: 800;
+line-height: 1.4;
+color: #fff;
+}
+/* Time-up overlay on q-panel */
+#q-panel .timeup-msg {
+display: none;
+position: absolute;
+inset: 0;
+background: rgba(11,37,69,.85);
+align-items: center;
+justify-content: center;
+flex-direction: column;
+gap: 4px;
+filter: none !important;
+}
+#q-panel.blurred .timeup-msg { display: flex; filter: none !important; }
+.timeup-msg .tu-icon { font-size: 32px; }
+.timeup-msg .tu-text { font-family: ‘Bebas Neue’, sans-serif; font-size: 22px; color: #f4c430; letter-spacing: 3px; }
+
+/* Answers panel */
+#a-panel {
+flex: 1;
+display: flex;
+flex-direction: column;
+justify-content: center;
+gap: 5px;
+overflow: hidden;
+transition: filter .5s;
+}
+#a-panel.blurred { filter: blur(6px); pointer-events: none; }
+
+.ans-btn {
+flex: 1;
+background: rgba(255,255,255,.06);
+border: 2px solid rgba(0,180,216,.2);
+border-radius: 8px;
+padding: 0 12px;
+color: #fff;
+font-family: ‘Montserrat’, sans-serif;
+font-size: clamp(11px, 1.8vw, 14px);
+font-weight: 700;
+text-align: left;
+display: flex;
+align-items: center;
+gap: 9px;
+cursor: pointer;
+min-height: 0;
+transition: border-color .15s, background .15s;
+-webkit-tap-highlight-color: transparent;
+}
+.ans-btn:hover:not(:disabled) {
+border-color: #00b4d8;
+background: rgba(0,180,216,.1);
+}
+.ans-btn:disabled { cursor: default; }
+.ans-lbl {
+width: 22px; height: 22px; border-radius: 5px; flex-shrink: 0;
+background: rgba(0,180,216,.15);
+border: 1px solid rgba(0,180,216,.35);
+display: flex; align-items: center; justify-content: center;
+font-family: ‘Bebas Neue’, sans-serif; font-size: 13px; color: #00b4d8;
+}
+.ans-btn:hover:not(:disabled) .ans-lbl { background: #00b4d8; color: #0b2545; }
+.ans-btn.ans-correct { background: rgba(46,204,113,.15); border-color: #2ecc71; }
+.ans-btn.ans-correct .ans-lbl { background: #2ecc71; color: #fff; border-color: #2ecc71; }
+.ans-btn.ans-wrong { background: rgba(231,76,60,.1); border-color: rgba(231,76,60,.4); }
+
+/* Feedback strip */
+#feedback {
+display: none;
+align-items: center;
+gap: 7px;
+padding: 4px 10px;
+font-size: 11px; font-weight: 700;
+border-radius: 6px;
+margin: 0 10px 3px;
+flex-shrink: 0;
+}
+#feedback.show { display: flex; }
+#feedback.fb-ok  { background: rgba(46,204,113,.12); border: 1px solid rgba(46,204,113,.35); color: #2ecc71; }
+#feedback.fb-err { background: rgba(231,76,60,.1);   border: 1px solid rgba(231,76,60,.3);   color: #f07070; }
+
+/* Player strip */
+#player-strip {
+height: 56px;
+display: flex;
+align-items: center;
+gap: 5px;
+padding: 4px 10px;
+border-top: 1px solid rgba(0,180,216,.12);
+background: rgba(6,15,30,.4);
+overflow-x: auto;
+overflow-y: hidden;
+flex-shrink: 0;
+}
+#player-strip::-webkit-scrollbar { height: 2px; }
+#player-strip::-webkit-scrollbar-thumb { background: rgba(0,180,216,.2); border-radius: 2px; }
+
+.pcard {
+flex-shrink: 0;
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 1px;
+background: rgba(255,255,255,.05);
+border: 2px solid rgba(0,180,216,.15);
+border-radius: 8px;
+padding: 4px 8px;
+min-width: 62px;
+transition: all .2s;
+}
+.pcard.pc-active {
+border-color: #f4c430;
+background: rgba(244,196,48,.1);
+transform: translateY(-3px);
+box-shadow: 0 4px 12px rgba(244,196,48,.25);
+}
+.pcard.pc-ok  { border-color: rgba(46,204,113,.45);  background: rgba(46,204,113,.1); }
+.pcard.pc-err { border-color: rgba(231,76,60,.4);   background: rgba(231,76,60,.08); }
+.pcard.pc-done { opacity: .5; }
+.pcard .pc-av {
+width: 22px; height: 22px; border-radius: 50%;
+display: flex; align-items: center; justify-content: center;
+font-weight: 900; font-size: 10px; color: #fff;
+position: relative;
+}
+.pcard .pc-tick {
+position: absolute; bottom: -2px; right: -3px;
+width: 10px; height: 10px; border-radius: 50%;
+display: flex; align-items: center; justify-content: center;
+font-size: 6px; border: 1px solid #0b2545;
+}
+.pcard.pc-ok  .pc-tick { background: #2ecc71; }
+.pcard.pc-err .pc-tick { background: #e74c3c; }
+.pcard .pc-name { font-size: 8px; font-weight: 700; color: #fff; text-align: center; max-width: 62px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pcard .pc-score { font-family: ‘Bebas Neue’, sans-serif; font-size: 14px; color: #f4c430; line-height: 1; }
+
+/* ════════════════════════════════════════════
+LEADERBOARD SCREEN
+════════════════════════════════════════════ */
+#s-board {
+flex-direction: row;
+padding: 10px 14px;
+gap: 14px;
+overflow: hidden;
+align-items: stretch;
+}
+#board-left {
+width: 180px;
+flex-shrink: 0;
+display: flex;
+flex-direction: column;
+gap: 8px;
+}
+#board-left .bl-title { font-family: ‘Bebas Neue’, sans-serif; font-size: 26px; letter-spacing: 3px; color: #f4c430; }
+#board-left .bl-sub   { font-size: 9px; letter-spacing: 2px; color: rgba(255,255,255,.35); text-transform: uppercase; }
+#board-left .bl-best  { background: rgba(0,180,216,.08); border: 1px solid rgba(0,180,216,.25); border-radius: 8px; padding: 10px 12px; flex: 1; }
+#board-left .bl-best .bb-lbl { font-size: 8px; letter-spacing: 1px; color: rgba(255,255,255,.35); text-transform: uppercase; margin-bottom: 4px; }
+#board-left .bl-best .bb-name { font-weight: 900; font-size: 16px; color: #2ecc71; }
+#board-left .bl-best .bb-pts  { font-size: 10px; color: rgba(255,255,255,.35); margin-top: 2px; }
+#btn-board-next {
+height: 36px; width: 100%;
+background: #00b4d8; color: #0b2545;
+border: none; border-radius: 6px;
+font-family: ‘Montserrat’, sans-serif;
+font-size: 12px; font-weight: 900;
+letter-spacing: 1px; text-transform: uppercase;
+cursor: pointer;
+}
+#board-right { flex: 1; display: flex; flex-direction: column; gap: 5px; overflow-y: auto; }
+#board-right::-webkit-scrollbar { width: 3px; }
+#board-right::-webkit-scrollbar-thumb { background: rgba(0,180,216,.2); border-radius: 2px; }
+.brow {
+display: flex; align-items: center; gap: 8px;
+background: rgba(255,255,255,.05); border: 1px solid rgba(0,180,216,.12);
+border-radius: 8px; padding: 7px 11px;
+flex-shrink: 0;
+}
+.brow.b1 { background: rgba(244,196,48,.1);  border-color: rgba(244,196,48,.35); }
+.brow.b2 { background: rgba(192,192,192,.06); border-color: rgba(192,192,192,.22); }
+.brow.b3 { background: rgba(205,127,50,.07);  border-color: rgba(205,127,50,.28); }
+.brow .bp { font-family: ‘Bebas Neue’, sans-serif; font-size: 18px; width: 20px; text-align: center; color: rgba(255,255,255,.3); }
+.brow .bp.gold   { color: #f4c430; }
+.brow .bp.silver { color: #c0c0c0; }
+.brow .bp.bronze { color: #cd7f32; }
+.brow .bav { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 11px; color: #fff; flex-shrink: 0; }
+.brow .bnm { flex: 1; font-weight: 800; font-size: 13px; }
+.brow .brp { font-size: 10px; color: rgba(255,255,255,.35); margin-right: 4px; }
+.brow .btt { font-family: ‘Bebas Neue’, sans-serif; font-size: 24px; color: #f4c430; line-height: 1; }
+.brow .bbar-w { width: 48px; height: 4px; background: rgba(255,255,255,.08); border-radius: 2px; overflow: hidden; flex-shrink: 0; }
+.brow .bbar { height: 100%; background: linear-gradient(90deg, #00b4d8, #2ecc71); border-radius: 2px; }
+
+/* ════════════════════════════════════════════
+FINAL SCREEN
+════════════════════════════════════════════ */
+#s-final {
+flex-direction: row;
+align-items: center;
+justify-content: center;
+padding: 10px 18px;
+gap: 24px;
+overflow: hidden;
+}
+#final-left { text-align: center; flex-shrink: 0; }
+#final-left .trophy { font-size: 56px; display: block; animation: bounce 2s ease infinite; }
+@keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+#final-left .fin-title { font-family: ‘Bebas Neue’, sans-serif; font-size: 48px; letter-spacing: 4px; color: #f4c430; line-height: 1; }
+#final-right { flex: 1; display: flex; flex-direction: column; gap: 5px; overflow: hidden; }
+#final-right .fr-title { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,.35); flex-shrink: 0; }
+#final-list { flex: 1; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
+.frow {
+display: flex; align-items: center; gap: 8px;
+background: rgba(255,255,255,.05); border: 1px solid rgba(0,180,216,.12);
+border-radius: 8px; padding: 6px 11px; flex-shrink: 0;
+}
+.frow.f1 { background: rgba(244,196,48,.12); border-color: rgba(244,196,48,.4); }
+.frow.f2 { background: rgba(192,192,192,.06); border-color: rgba(192,192,192,.22); }
+.frow.f3 { background: rgba(205,127,50,.07);  border-color: rgba(205,127,50,.28); }
+.frow .fm { font-size: 18px; flex-shrink: 0; }
+.frow .fav { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 11px; color: #fff; flex-shrink: 0; }
+.frow .fnm { flex: 1; font-weight: 800; font-size: 13px; }
+.frow .fpt { font-family: ‘Bebas Neue’, sans-serif; font-size: 26px; color: #f4c430; line-height: 1; }
+.frow .fpc { font-size: 10px; color: rgba(255,255,255,.3); margin-left: 3px; }
+#btn-restart {
+height: 38px; margin-top: 6px; flex-shrink: 0;
+background: #f4c430; color: #0b2545;
+border: none; border-radius: 6px;
+font-family: ‘Montserrat’, sans-serif;
+font-size: 12px; font-weight: 900;
+letter-spacing: 1px; text-transform: uppercase;
+cursor: pointer;
+}
+
+/* ════════════════════════════════════════════
+SHARED BUTTON
+════════════════════════════════════════════ */
+.btn-cta {
+background: #00b4d8; color: #0b2545;
+border: none; border-radius: 6px;
+padding: 10px 28px;
+font-family: ‘Montserrat’, sans-serif;
+font-size: 13px; font-weight: 900;
+letter-spacing: 1px; text-transform: uppercase;
+cursor: pointer;
+}
+.btn-cta:active { opacity: .8; }
+
+/* confetti */
+#confetti { position: fixed; inset: 0; pointer-events: none; z-index: 999; }
+.cfto { position: absolute; top: -20px; width: 9px; height: 9px; animation: cfall var(–dur) linear forwards var(–dl); opacity: 0; border-radius: var(–r); }
+@keyframes cfall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; left: var(–x); } 100% { transform: translateY(110vh) rotate(720deg); opacity: 0; left: calc(var(–x) + var(–drift)); } }
+
+/* ── FULLSCREEN BUTTON ── */
+#btn-fs {
+position: fixed;
+top: 8px; right: 8px;
+z-index: 9999;
+width: 36px; height: 36px;
+background: rgba(0,180,216,.2);
+border: 1px solid rgba(0,180,216,.4);
+border-radius: 8px;
+color: #00b4d8;
+font-size: 16px;
+cursor: pointer;
+display: flex; align-items: center; justify-content: center;
+backdrop-filter: blur(4px);
+transition: background .2s;
+}
+#btn-fs:hover { background: rgba(0,180,216,.35); }
+</style>
+
+</head>
+<body>
+
+<!-- BACKGROUND -->
+
+<div id="bg">
+  <div id="bg-mountains">
+    <svg viewBox="0 0 1200 280" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1a3a70"/><stop offset="100%" stop-color="#0a1a38"/></linearGradient>
+        <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0e2244"/><stop offset="100%" stop-color="#060f1e"/></linearGradient>
+        <linearGradient id="g3" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#091624"/><stop offset="100%" stop-color="#040c18"/></linearGradient>
+      </defs>
+      <!-- back -->
+      <polygon points="0,280 100,110 220,200 370,40 510,160 660,25 800,145 940,58 1080,175 1200,85 1200,280" fill="url(#g1)"/>
+      <polygon points="370,40 340,95 400,95"  fill="rgba(220,235,255,.5)"/>
+      <polygon points="660,25 628,88 692,88"  fill="rgba(220,235,255,.5)"/>
+      <polygon points="940,58 908,118 972,118" fill="rgba(220,235,255,.48)"/>
+      <!-- mid -->
+      <polygon points="0,280 80,155 200,215 330,95 475,195 600,72 740,185 870,102 1010,205 1130,128 1200,155 1200,280" fill="url(#g2)"/>
+      <polygon points="330,95 302,148 358,148"  fill="rgba(230,245,255,.55)"/>
+      <polygon points="600,72 572,128 628,128"  fill="rgba(230,245,255,.55)"/>
+      <polygon points="870,102 844,155 896,155" fill="rgba(230,245,255,.5)"/>
+      <!-- front -->
+      <polygon points="0,280 0,128 118,156 238,86 368,138 492,58 620,136 750,50 880,138 1010,68 1132,148 1200,108 1200,280" fill="url(#g3)"/>
+      <polygon points="238,86 213,122 263,122"  fill="rgba(242,252,255,.63)"/>
+      <polygon points="492,58 466,100 518,100"  fill="rgba(242,252,255,.66)"/>
+      <polygon points="750,50 724,94 776,94"    fill="rgba(242,252,255,.66)"/>
+      <polygon points="1010,68 986,108 1034,108" fill="rgba(242,252,255,.62)"/>
+    </svg>
+  </div>
+  <div id="bg-snow"></div>
+</div>
+
+<div id="confetti"></div>
+
+<!-- ══════════ APP ══════════ -->
+
+<div id="app">
+
+<button id="btn-fs" onclick="toggleFS()" title="Pełny ekran">⛶</button>
+
+  <!-- WELCOME -->
+
+  <div class="screen active" id="s-welcome">
+    <div class="logo" style="margin-bottom:4px">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 2v20M12 2l-4 4M12 2l4 4M12 22l-4-4M12 22l4-4M2 12h20M2 12l4-4M2 12l4 4M22 12l-4-4M22 12l-4 4" stroke="#0b2545" stroke-width="2" stroke-linecap="round"/></svg>
+      </div>
+      <div class="logo-text"><div class="t1">SNOW<span>EVENTS</span></div><div class="t2">snowevents.pl</div></div>
+    </div>
+    <h1>LA PLAGNE<br><span>QUIZ NIGHT</span></h1>
+    <p>3 tury · 51 pytań · 30 sekund na pytanie</p>
+    <div class="round-cards">
+      <div class="round-card"><div class="num">1</div><div class="lbl">Podstawy</div></div>
+      <div class="round-card"><div class="num">2</div><div class="lbl">Stoki & Sport</div></div>
+      <div class="round-card"><div class="num">3</div><div class="lbl">Ekspert</div></div>
+    </div>
+    <button class="btn-cta" onclick="showScreen('s-setup')">Dodaj graczy ▶</button>
+  </div>
+
+  <!-- SETUP -->
+
+  <div class="screen" id="s-setup">
+    <div id="setup-left">
+      <div class="sl-title">⛷ Gracze</div>
+      <div class="sl-hint">2–15 graczy · wpisz imię i kliknij +</div>
+      <div class="sl-input-row">
+        <input id="name-inp" type="text" placeholder="Imię gracza…" maxlength="15"
+               onkeydown="if(event.key==='Enter')addPlayer()">
+        <button onclick="addPlayer()">+</button>
+      </div>
+      <div class="sl-footer">
+        <span class="count" id="p-count">0 graczy</span>
+        <button id="btn-start" onclick="beginQuiz()" disabled>START ▶</button>
+      </div>
+    </div>
+    <div id="setup-right">
+      <div class="sr-title" id="sr-title">LISTA GRACZY</div>
+      <div id="player-list"></div>
+    </div>
+  </div>
+
+  <!-- ROUND INTRO -->
+
+  <div class="screen" id="s-intro">
+    <div class="logo" style="margin-bottom:12px">
+      <div class="logo-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2v20M12 2l-4 4M12 2l4 4M12 22l-4-4M12 22l4-4M2 12h20M2 12l4-4M2 12l4 4M22 12l-4-4M22 12l-4 4" stroke="#0b2545" stroke-width="2" stroke-linecap="round"/></svg></div>
+      <div class="logo-text"><div class="t1">SNOW<span>EVENTS</span></div><div class="t2">snowevents.pl</div></div>
+    </div>
+    <div class="big-num" id="intro-num">1</div>
+    <div class="round-title" id="intro-title">TURA PIERWSZA</div>
+    <div class="round-desc" id="intro-desc"></div>
+    <button class="btn-cta" style="margin-top:16px" onclick="startQuiz()">Startujemy ⛷️</button>
+  </div>
+
+  <!-- QUIZ -->
+
+  <div class="screen" id="s-quiz">
+    <div id="quiz-bar">
+      <div class="logo logo-sm" style="flex-shrink:0">
+        <div class="logo-icon" style="width:26px;height:26px;border-radius:5px"><svg viewBox="0 0 24 24" fill="none" style="width:16px;height:16px"><path d="M12 2v20M12 2l-4 4M12 2l4 4M12 22l-4-4M12 22l4-4M2 12h20M2 12l4-4M2 12l4 4M22 12l-4-4M22 12l-4 4" stroke="#0b2545" stroke-width="2" stroke-linecap="round"/></svg></div>
+        <div class="logo-text"><div class="t1" style="font-size:11px">SNOW<span>EVENTS</span></div></div>
+      </div>
+      <div id="quiz-progress">
+        <div class="pr-labels"><span id="pr-left">Pytanie 1/17</span><span id="pr-right">TURA 1</span></div>
+        <div class="pr-track"><div class="pr-fill" id="pr-fill" style="width:0%"></div></div>
+      </div>
+      <div id="turn-badge">
+        <div id="turn-dot"></div>
+        <div>
+          <div id="turn-name">—</div>
+          <div id="turn-sub">odpowiada</div>
+        </div>
+      </div>
+      <!-- Timer circle -->
+      <div id="timer-wrap">
+        <svg id="timer-svg" viewBox="0 0 36 36">
+          <circle id="timer-circle-bg" cx="18" cy="18" r="15"/>
+          <circle id="timer-circle"    cx="18" cy="18" r="15"/>
+        </svg>
+        <span id="timer-num">30</span>
+      </div>
+    </div>
+
+```
+<div id="quiz-body">
+  <div id="q-panel">
+    <div id="q-tag">PYTANIE 1</div>
+    <div id="q-text">…</div>
+    <div class="timeup-msg">
+      <div class="tu-icon">⏱️</div>
+      <div class="tu-text">CZAS MINĄŁ!</div>
+    </div>
+  </div>
+  <div id="a-panel"></div>
+</div>
+
+<div id="feedback"></div>
+<div id="player-strip"></div>
+```
+
+  </div>
+
+  <!-- LEADERBOARD -->
+
+  <div class="screen" id="s-board">
+    <div id="board-left">
+      <div class="bl-title">RANKING</div>
+      <div class="bl-sub" id="board-round-lbl">PO TURZE 1</div>
+      <div class="bl-best">
+        <div class="bb-lbl">⭐ Najlepszy tej tury</div>
+        <div class="bb-name" id="bb-name">—</div>
+        <div class="bb-pts"  id="bb-pts">—</div>
+      </div>
+      <button id="btn-board-next">Następna tura →</button>
+    </div>
+    <div id="board-right"></div>
+  </div>
+
+  <!-- FINAL -->
+
+  <div class="screen" id="s-final">
+    <div id="final-left">
+      <span class="trophy">🏆</span>
+      <div class="fin-title">KONIEC!</div>
+      <div class="logo" style="margin-top:10px;justify-content:center">
+        <div class="logo-icon" style="width:24px;height:24px;border-radius:5px"><svg viewBox="0 0 24 24" fill="none" style="width:15px;height:15px"><path d="M12 2v20M12 2l-4 4M12 2l4 4M12 22l-4-4M12 22l4-4M2 12h20M2 12l4-4M2 12l4 4M22 12l-4-4M22 12l-4 4" stroke="#0b2545" stroke-width="2" stroke-linecap="round"/></svg></div>
+        <div class="logo-text"><div class="t1" style="font-size:11px">SNOW<span>EVENTS</span></div><div class="t2">snowevents.pl</div></div>
+      </div>
+    </div>
+    <div id="final-right">
+      <div class="fr-title">🏅 WYNIKI KOŃCOWE</div>
+      <div id="final-list"></div>
+      <button id="btn-restart" onclick="restartQuiz()">↺ Zagraj ponownie</button>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<script>
+// ════════════════════════════════════════
+// QUESTIONS
+// ════════════════════════════════════════
+const ROUNDS = [
+  { title:'TURA PIERWSZA', questions:[
+    {q:'W którym kraju leży La Plagne?', a:['Francja','Szwajcaria','Włochy','Austria'], c:0},
+    {q:'W jakim paśmie górskim leży La Plagne?', a:['Alpy Sabaudzkie','Pireneje','Apeniny','Vosges'], c:0},
+    {q:'Jak nazywa się połączenie narciarskie do którego należy La Plagne?', a:['Paradiski','Les 3 Vallées','Espace Killy','Portes du Soleil'], c:0},
+    {q:'Który ośrodek łączy z La Plagne kolejka Vanoise Express?', a:['Les Arcs','Val d\'Isère','Tignes','Méribel'], c:0},
+    {q:'Na jakiej wysokości n.p.m. leży najwyższy punkt narciarski w La Plagne?', a:['Ok. 3250 m','Ok. 2100 m','Ok. 1800 m','Ok. 4000 m'], c:0},
+    {q:'Jak nazywa się lodowiec w La Plagne czynny przez cały rok?', a:['Glacer de Bellecôte','Mer de Glace','Glacier d\'Argentière','Bossons'], c:0},
+    {q:'Ile km tras oferuje Paradiski?', a:['Ok. 425 km','Ok. 200 km','Ok. 600 km','Ok. 150 km'], c:0},
+    {q:'W którym roku La Plagne gościła zawody bobslejowe na IO?', a:['1992','1968','1980','1998'], c:0},
+    {q:'W którym mieście odbyły się te Igrzyska Olimpijskie?', a:['Albertville','Grenoble','Chamonix','Val d\'Isère'], c:0},
+    {q:'Która wioska kompleksu La Plagne leży NAJWYŻEJ?', a:['Aime 2000','Belle Plagne','Plagne Centre','Plagne Soleil'], c:0},
+    {q:'Jaki region administracyjny Francji obejmuje La Plagne?', a:['Owernia-Rodan-Alpy','Prowansja-PACA','Oksytania','Bretania'], c:0},
+    {q:'W jakim departamencie leży La Plagne?', a:['Savoie (Sabaudia)','Isère','Haute-Savoie','Ain'], c:0},
+    {q:'Jak nazywa się dolina, w której leży La Plagne?', a:['Dolina Tarentaise','Dolina Maurienne','Dolina Chamonix','Dolina Ubaye'], c:0},
+    {q:'Do jakiego miasta jedzie się TGV z Paryża na La Plagne?', a:['Bourg-Saint-Maurice','Grenoble','Chambéry','Annecy'], c:0},
+    {q:'Który ośrodek NIE wchodzi w skład kompleksu La Plagne?', a:['Val Thorens','Plagne 1800','Champagny-en-Vanoise','Montchavin'], c:0},
+    {q:'Ile wiosek wchodzi w skład kompleksu La Plagne?', a:['10','5','3','15'], c:0},
+    {q:'Jaki kolor oznacza trasy dla zaawansowanych narciarzy we Francji?', a:['Czarny','Czerwony','Niebieski','Zielony'], c:0},
+  ]},
+  { title:'TURA DRUGA', questions:[
+    {q:'Jaki kolor oznacza trasy dla początkujących we Francji?', a:['Zielony','Niebieski','Czerwony','Żółty'], c:0},
+    {q:'Ile wyciągów liczy łącznie obszar Paradiski?', a:['Ponad 140','Ok. 60','Ok. 30','Ponad 200'], c:0},
+    {q:'Ile osób mieści jedna kabina Vanoise Express?', a:['200','50','100','350'], c:0},
+    {q:'Jaki sport można uprawiać na lodowcu Bellecôte latem?', a:['Narciarstwo lodowcowe','Skoki BASE','Paralotniarstwo','Nurkowanie'], c:0},
+    {q:'Jaka sabaudzka potrawa serowa jest popularna w La Plagne?', a:['Raclette','Fondue bourguignonne','Tartiflette','Pierogi'], c:0},
+    {q:'Ile metrów przewyższenia mają trasy La Plagne?', a:['Ok. 2000 m','Ok. 500 m','Ok. 800 m','Ok. 3500 m'], c:0},
+    {q:'W którym miesiącu La Plagne typowo otwiera sezon?', a:['Grudzień','Październik','Styczeń','Luty'], c:0},
+    {q:'Jaki ekologiczny transport łączy wioski La Plagne?', a:['Darmowe busy i telecabiny','Meleks','Riksze','Kolejka zębata'], c:0},
+    {q:'Jak nazywa się sabaudzkie danie z ziemniaków, śmietany i bekonu?', a:['Tartiflette','Croziflette','Diots','Bouillabaisse'], c:0},
+    {q:'Ser Beaufort z okolic La Plagne to odmiana jakiego sera?', a:['Twardy dojrzewający (gruyère)','Pleśniowy (roquefort)','Miękki kremowy (brie)','Kozi (chèvre)'], c:0},
+    {q:'W której wiosce La Plagne jest tor bobslejowy?', a:['Plagne 1800','Belle Plagne','Plagne Centre','Aime 2000'], c:0},
+    {q:'Typowy zakres temperatur na La Plagne w środku zimy?', a:['-15°C do -5°C','-2°C do 5°C','0°C do 10°C','-30°C do -20°C'], c:0},
+    {q:'Jaki sport freestylowy jest popularny na muldo-stoku?', a:['Mogule','Telemark','Nordic combined','Skicross'], c:0},
+    {q:'Co to jest ESF w kontekście La Plagne?', a:['École du Ski Français – szkoła narciarska','European Ski Federation','Espace Sportif Français','Electric Ski Funicular'], c:0},
+    {q:'Jak slangowo nazywa się idealnie sproszkowany śnieg?', a:['Powder','Firn','Corn','Crust'], c:0},
+    {q:'Jak długo trwa przejazd Vanoise Express?', a:['Ok. 4 minuty','Ok. 20 minut','Ok. 45 minut','Ok. 1 minutę'], c:0},
+    {q:'Co to jest off-piste w narciarstwie?', a:['Jazda poza oznakowanymi trasami','Jazda na nartach wodnych','Slalom gigant','Skoki narciarskie'], c:0},
+  ]},
+  { title:'TURA TRZECIA', questions:[
+    {q:'W którym roku oficjalnie otwarto La Plagne?', a:['1961','1945','1975','1980'], c:0},
+    {q:'Jak wysokie jest Mont Pourri – najwyższe wzniesienie masywu?', a:['3779 m n.p.m.','4808 m','2500 m','3200 m'], c:0},
+    {q:'Jak nazywa się park narodowy sąsiadujący z La Plagne?', a:['Parc National de la Vanoise','Parc des Écrins','Parc du Mercantour','Parc des Bauges'], c:0},
+    {q:'Jaka dyscyplina polega na zjeździe głową DO PRZODU na saneczku?', a:['Skeleton','Luge','Skibob','Monobob'], c:0},
+    {q:'Jakie zjawisko powoduje ciepły wiatr z gór znany w La Plagne?', a:['Fen (foehn)','Passat','Bora','Monsun'], c:0},
+    {q:'Jaki gatunek jest symbolem Parku Vanoise?', a:['Ibex (koziorożec alpejski)','Niedźwiedź brunatny','Wilk szary','Ryś eurazjatycki'], c:0},
+    {q:'Co znaczy "La Plagne" z lokalnej gwary sabaudzkiej?', a:['Płaskowyż / równina','Góra','Dolina','Lodowiec'], c:0},
+    {q:'Na jakiej wysokości leży wioska Plagne Centre?', a:['Ok. 1970 m n.p.m.','Ok. 1200 m','Ok. 2500 m','Ok. 800 m'], c:0},
+    {q:'Jak nazywa się telekabina z Champagny-en-Vanoise na La Plagne?', a:['Télécabine de la Rossa','Vanoise Express','Arc 2000 Link','Bellecôte Cable Car'], c:0},
+    {q:'Ile km ma najdłuższa trasa w obszarze La Plagne?', a:['Ok. 14 km','Ok. 5 km','Ok. 20 km','Ok. 2 km'], c:0},
+    {q:'Jak w żargonie nazywamy trasy z ubitego zmrożonego śniegu?', a:['Groomer / corduroy','Powder','Mogule','Slush'], c:0},
+    {q:'Który kraj był gospodarzem IO gdy La Plagne była areną bobslejową?', a:['Francja (Albertville 1992)','Niemcy','Austria','USA'], c:0},
+    {q:'Co to jest snowpark na stacji narciarskiej?', a:['Strefa z kickers, rails i halfpipe','Parking skuterów śnieżnych','Plac zabaw dla dzieci','Strefa VIP'], c:0},
+    {q:'Jak nazywa się styl narciarstwa z płynnymi szeroko-łukowymi skrętami?', a:['Carving','Mogule','Freestyle','Telemark'], c:0},
+    {q:'Co to jest PGHM w kontekście ratowniczym?', a:['Peloton de Gendarmerie de Haute Montagne – ratownicy górscy','Prywatna szkoła narciarska','Sieć wyciągów Paradiski','Parking La Plagne'], c:0},
+    {q:'Typowa przepustowość wyciągu gondolowego w La Plagne na godzinę?', a:['Ok. 2000–3000 osób','Ok. 100 osób','Ok. 500 osób','Ok. 10 000 osób'], c:0},
+    {q:'Co wyróżnia ofertę Snowevents spośród innych biur narciarskich?', a:['Kompleksowa obsługa grupy z dedykowanym opiekunem i atrakcjami','Tylko tanie bilety lotnicze','Wyłącznie kursy języka','Samodzielne planowanie'], c:0},
+  ]},
+];
+
+// ════════════════════════════════════════
+// COLORS
+// ════════════════════════════════════════
+const COLORS = ['#e5454a','#00b4d8','#2ecc71','#f4c430','#9b59b6','#ff7f2a','#1abc9c','#e91e8c','#27ae60','#e74c3c','#2980b9','#f39c12','#16a085','#8e44ad','#c0392b'];
+
+// ════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════
+let players   = [];
+let cRound    = 0;
+let cQ        = 0;
+let cPlayer   = 0;
+let shuffled  = null;
+let qResults  = [];
+let timerInt  = null;
+let timerSecs = 30;
+const TIMER_TOTAL = 30;
+const CIRC = 2 * Math.PI * 15; // circumference for r=15
+
+// ════════════════════════════════════════
+// BG SNOWFLAKES
+// ════════════════════════════════════════
+(function(){
+  const container = document.getElementById('bg-snow');
+  const chars = ['❄','❅','❆'];
+  for (let i = 0; i < 22; i++) {
+    const el = document.createElement('div');
+    el.className = 'flake';
+    el.textContent = chars[i % chars.length];
+    const size = Math.random() * 12 + 7;
+    const dur  = Math.random() * 9 + 8;
+    const del  = Math.random() * 12;
+    const left = Math.random() * 100;
+    el.style.cssText = `font-size:${size}px; animation-duration:${dur}s; animation-delay:-${del}s; left:${left}%`;
+    container.appendChild(el);
+  }
+})();
+
+// Timer circle init
+document.getElementById('timer-circle').style.strokeDasharray  = CIRC;
+document.getElementById('timer-circle').style.strokeDashoffset = 0;
+
+// ════════════════════════════════════════
+// SCREEN SWITCH
+// ════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ════════════════════════════════════════
+// PLAYER SETUP
+// ════════════════════════════════════════
+function addPlayer() {
+  const inp  = document.getElementById('name-inp');
+  const name = inp.value.trim();
+  if (!name) return;
+  if (players.length >= 15) { alert('Maksymalnie 15 graczy!'); return; }
+  const dup = players.some(p => p.name.toLowerCase() === name.toLowerCase());
+  if (dup) { inp.value = ''; inp.focus(); return; }
+  players.push({ name: name, color: COLORS[players.length % COLORS.length], score: [0,0,0] });
+  inp.value = '';
+  inp.focus();
+  refreshSetup();
+}
+
+function removePlayer(i) {
+  players.splice(i, 1);
+  players.forEach((p, idx) => p.color = COLORS[idx % COLORS.length]);
+  refreshSetup();
+}
+
+function refreshSetup() {
+  const list  = document.getElementById('player-list');
+  const count = document.getElementById('p-count');
+  const title = document.getElementById('sr-title');
+  const btn   = document.getElementById('btn-start');
+  list.innerHTML = '';
+  players.forEach(function(p, i) {
+    const chip = document.createElement('div');
+    chip.className = 'pchip';
+    chip.innerHTML =
+      '<div class="av" style="background:' + p.color + '">' + p.name[0].toUpperCase() + '</div>' +
+      '<div class="nm">' + p.name + '</div>' +
+      '<button class="del" onclick="removePlayer(' + i + ')">✕</button>';
+    list.appendChild(chip);
+  });
+  const n = players.length;
+  count.textContent = n + (n === 1 ? ' gracz' : ' graczy');
+  title.textContent = n > 0 ? 'LISTA GRACZY (' + n + ')' : 'LISTA GRACZY';
+  btn.disabled = n < 2;
+}
+
+// ════════════════════════════════════════
+// BEGIN QUIZ
+// ════════════════════════════════════════
+function beginQuiz() {
+  if (players.length < 2) return;
+  players.forEach(p => p.score = [0,0,0]);
+  cRound = 0; cQ = 0; cPlayer = 0; qResults = [];
+  goRoundIntro(0);
+}
+
+function goRoundIntro(idx) {
+  cRound  = idx;
+  cQ      = 0;
+  cPlayer = 0;
+  qResults = [];
+  document.getElementById('intro-num').textContent   = idx + 1;
+  document.getElementById('intro-title').textContent = ROUNDS[idx].title;
+  document.getElementById('intro-desc').textContent  =
+    'Każdy z ' + players.length + ' graczy odpowiada na każde pytanie';
+  showScreen('s-intro');
+}
+
+function startQuiz() {
+  showScreen('s-quiz');
+  renderQ();
+}
+
+// ════════════════════════════════════════
+// SHUFFLE
+// ════════════════════════════════════════
+function doShuffle(qd) {
+  const correct = qd.a[qd.c];
+  const arr = qd.a.slice().sort(() => Math.random() - 0.5);
+  return { answers: arr, correctIdx: arr.indexOf(correct) };
+}
+
+// ════════════════════════════════════════
+// RENDER QUESTION
+// ════════════════════════════════════════
+function renderQ() {
+  const round = ROUNDS[cRound];
+  const qd    = round.questions[cQ];
+  const total = round.questions.length;
+
+  if (cPlayer === 0) {
+    shuffled = doShuffle(qd);
+    qResults[cQ] = players.map(() => null);
+  }
+
+  // un-blur
+  document.getElementById('q-panel').classList.remove('blurred');
+  document.getElementById('a-panel').classList.remove('blurred');
+
+  // topbar
+  document.getElementById('pr-left').textContent  = 'Pytanie ' + (cQ+1) + '/' + total;
+  document.getElementById('pr-right').textContent = 'TURA ' + (cRound+1);
+  document.getElementById('pr-fill').style.width  = (cQ / total * 100) + '%';
+
+  const p = players[cPlayer];
+  document.getElementById('turn-dot').style.background = p.color;
+  document.getElementById('turn-name').textContent     = p.name;
+
+  // question
+  document.getElementById('q-tag').textContent  = 'PYTANIE ' + (cQ+1);
+  document.getElementById('q-text').textContent = qd.q;
+
+  // answers
+  const panel = document.getElementById('a-panel');
+  panel.innerHTML = '';
+  const LBLS = ['A','B','C','D'];
+  shuffled.answers.forEach(function(ans, i) {
+    const btn = document.createElement('button');
+    btn.className = 'ans-btn';
+    btn.innerHTML = '<span class="ans-lbl">' + LBLS[i] + '</span>' + ans;
+    btn.addEventListener('click', function() { pickAnswer(i, btn); });
+    panel.appendChild(btn);
+  });
+
+  // feedback
+  const fb = document.getElementById('feedback');
+  fb.className = '';
+  fb.textContent = '';
+
+  // player strip
+  renderStrip();
+
+  // start timer
+  startTimer();
+}
+
+// ════════════════════════════════════════
+// TIMER
+// ════════════════════════════════════════
+function startTimer() {
+  stopTimer();
+  timerSecs = TIMER_TOTAL;
+  updateTimerUI();
+  timerInt = setInterval(function() {
+    timerSecs--;
+    updateTimerUI();
+    if (timerSecs <= 0) {
+      stopTimer();
+      onTimeUp();
+    }
+  }, 1000);
+}
+
+function stopTimer() {
+  if (timerInt) { clearInterval(timerInt); timerInt = null; }
+}
+
+function updateTimerUI() {
+  document.getElementById('timer-num').textContent = timerSecs;
+  const frac   = timerSecs / TIMER_TOTAL;
+  const offset = CIRC * (1 - frac);
+  const circle = document.getElementById('timer-circle');
+  circle.style.strokeDashoffset = offset;
+  // color: green → yellow → red
+  circle.style.stroke = frac > 0.5 ? '#2ecc71' : frac > 0.25 ? '#f4c430' : '#e74c3c';
+}
+
+function onTimeUp() {
+  // blur only the question — answers remain clickable so host can still pick
+  document.getElementById('q-panel').classList.add('blurred');
+  // mark current player as err (no answer) — can still be overridden if host taps
+  qResults[cQ][cPlayer] = 'err';
+  renderStrip();
+  // advance after 3s (gives host time to tap an answer if needed)
+  setTimeout(advance, 3000);
+}
+
+// ════════════════════════════════════════
+// PICK ANSWER
+// ════════════════════════════════════════
+function pickAnswer(idx, btn) {
+  stopTimer();
+  document.querySelectorAll('.ans-btn').forEach(b => b.disabled = true);
+
+  const p = players[cPlayer];
+  const isCorrect    = (idx === shuffled.correctIdx);
+  const isLastPlayer = (cPlayer === players.length - 1);
+
+  qResults[cQ][cPlayer] = isCorrect ? 'ok' : 'err';
+
+  if (isCorrect) {
+    p.score[cRound]++;
+    const tot = p.score.reduce((a,b) => a+b, 0);
+    const fb  = document.getElementById('feedback');
+    fb.className = 'show fb-ok';
+    fb.textContent = isLastPlayer
+      ? '✓ ' + p.name + ' – punkt! (' + tot + ' łącznie)  →  Poprawna odpowiedź podświetlona!'
+      : '✓ ' + p.name + ' – punkt! Łącznie: ' + tot + ' pkt';
+  } else {
+    const fb = document.getElementById('feedback');
+    fb.className = 'show fb-err';
+    fb.textContent = isLastPlayer
+      ? '✗ ' + p.name + ' – błąd!  →  Poprawna odpowiedź podświetlona!'
+      : '✗ ' + p.name + ' – błąd!';
+  }
+
+  // Reveal correct answer only after LAST player
+  if (isLastPlayer) {
+    const btns = document.querySelectorAll('.ans-btn');
+    btns.forEach(function(b, i) {
+      if (i === shuffled.correctIdx) b.classList.add('ans-correct');
+      else b.classList.add('ans-wrong');
+    });
+  }
+
+  renderStrip();
+  const delay = isLastPlayer ? 2200 : 1100;
+  setTimeout(advance, delay);
+}
+
+// ════════════════════════════════════════
+// ADVANCE
+// ════════════════════════════════════════
+function advance() {
+  cPlayer++;
+  if (cPlayer < players.length) {
+    renderQ();
+  } else {
+    cPlayer = 0;
+    cQ++;
+    if (cQ < ROUNDS[cRound].questions.length) {
+      renderQ();
+    } else {
+      qResults = [];
+      showLeaderboard();
+    }
+  }
+}
+
+// ════════════════════════════════════════
+// PLAYER STRIP
+// ════════════════════════════════════════
+function renderStrip() {
+  const strip = document.getElementById('player-strip');
+  strip.innerHTML = '';
+  players.forEach(function(p, i) {
+    const res = (qResults[cQ] && qResults[cQ][i] !== undefined) ? qResults[cQ][i] : null;
+    const card = document.createElement('div');
+
+    let cls = 'pcard';
+    if      (i === cPlayer) cls += ' pc-active';
+    else if (res === 'ok')  cls += ' pc-ok pc-done';
+    else if (res === 'err') cls += ' pc-err pc-done';
+
+    const tick = res === 'ok' ? '✓' : res === 'err' ? '✗' : '';
+    const tickHtml = tick ? '<div class="pc-tick">' + tick + '</div>' : '';
+    const total = p.score.reduce((a,b) => a+b, 0);
+
+    card.className = cls;
+    card.id = 'pc-' + i;
+    card.innerHTML =
+      '<div class="pc-av" style="background:' + p.color + '">' + p.name[0].toUpperCase() + tickHtml + '</div>' +
+      '<div class="pc-name">' + p.name + '</div>' +
+      '<div class="pc-score">' + total + '</div>';
+    strip.appendChild(card);
+  });
+  const active = document.getElementById('pc-' + cPlayer);
+  if (active) active.scrollIntoView({ inline:'center', block:'nearest' });
+}
+
+// ════════════════════════════════════════
+// LEADERBOARD
+// ════════════════════════════════════════
+function showLeaderboard() {
+  stopTimer();
+  const r = cRound;
+  document.getElementById('board-round-lbl').textContent = 'PO TURZE ' + (r+1);
+
+  const sorted = players.slice().sort(function(a,b) {
+    return b.score.reduce((x,y) => x+y, 0) - a.score.reduce((x,y) => x+y, 0);
+  });
+
+  const bestRound = players.slice().sort((a,b) => b.score[r] - a.score[r])[0];
+  document.getElementById('bb-name').textContent = bestRound.name;
+  document.getElementById('bb-pts').textContent  = bestRound.score[r] + ' pkt w tej turze';
+
+  const maxTotal = ROUNDS.reduce((a, rd) => a + rd.questions.length, 0);
+  const right = document.getElementById('board-right');
+  right.innerHTML = '';
+
+  const PC = ['b1','b2','b3'];
+  const CC = ['gold','silver','bronze'];
+  sorted.forEach(function(p, pos) {
+    const total = p.score.reduce((a,b) => a+b, 0);
+    const row = document.createElement('div');
+    row.className = 'brow ' + (PC[pos] || '');
+    row.innerHTML =
+      '<div class="bp ' + (CC[pos]||'') + '">' + (pos+1) + '</div>' +
+      '<div class="bav" style="background:' + p.color + '">' + p.name[0].toUpperCase() + '</div>' +
+      '<div class="bnm">' + p.name + '</div>' +
+      '<div class="brp">+' + p.score[r] + ' pkt</div>' +
+      '<div class="btt">' + total + '</div>' +
+      '<div class="bbar-w"><div class="bbar" style="width:' + Math.round(total/maxTotal*100) + '%"></div></div>';
+    right.appendChild(row);
+  });
+
+  const btn = document.getElementById('btn-board-next');
+  if (r < ROUNDS.length - 1) {
+    btn.textContent = 'Tura ' + (r+2) + ' →';
+    btn.onclick     = function() { goRoundIntro(r+1); };
+  } else {
+    btn.textContent = '🏆 Wynik końcowy';
+    btn.onclick     = showFinal;
+  }
+  showScreen('s-board');
+}
+
+// ════════════════════════════════════════
+// FINAL
+// ════════════════════════════════════════
+function showFinal() {
+  const maxTotal = ROUNDS.reduce((a, r) => a + r.questions.length, 0);
+  const sorted   = players.slice().sort(function(a,b) {
+    return b.score.reduce((x,y) => x+y, 0) - a.score.reduce((x,y) => x+y, 0);
+  });
+  const medals = ['🥇','🥈','🥉'];
+  const list   = document.getElementById('final-list');
+  list.innerHTML = '';
+  sorted.forEach(function(p, pos) {
+    const total = p.score.reduce((a,b) => a+b, 0);
+    const pct   = Math.round(total / maxTotal * 100);
+    const row   = document.createElement('div');
+    row.className = 'frow ' + (['f1','f2','f3'][pos] || '');
+    row.innerHTML =
+      '<div class="fm">' + (medals[pos] || (pos+1)+'.') + '</div>' +
+      '<div class="fav" style="background:' + p.color + '">' + p.name[0].toUpperCase() + '</div>' +
+      '<div class="fnm">' + p.name + '</div>' +
+      '<div class="fpt">' + total + '<span class="fpc"> ' + pct + '%</span></div>';
+    list.appendChild(row);
+  });
+  showScreen('s-final');
+  launchConfetti();
+}
+
+// ════════════════════════════════════════
+// RESTART
+// ════════════════════════════════════════
+function restartQuiz() {
+  stopTimer();
+  players.forEach(p => p.score = [0,0,0]);
+  qResults = []; cRound = 0; cQ = 0; cPlayer = 0;
+  showScreen('s-welcome');
+}
+
+// ════════════════════════════════════════
+// CONFETTI
+// ════════════════════════════════════════
+function launchConfetti() {
+  const c    = document.getElementById('confetti');
+  c.innerHTML = '';
+  const cols = ['#f4c430','#00b4d8','#2ecc71','#e74c3c','#fff','#c5e4f5'];
+  for (let i = 0; i < 120; i++) {
+    const d  = document.createElement('div');
+    d.className = 'cfto';
+    const x  = Math.random() * 100;
+    d.style.cssText =
+      '--x:' + x + 'vw;' +
+      '--drift:' + ((Math.random()-.5)*180) + 'px;' +
+      '--dur:' + (Math.random()*2+2).toFixed(1) + 's;' +
+      '--dl:'  + (Math.random()*1.4).toFixed(2) + 's;' +
+      '--r:'   + (Math.random()>.5?'50%':'3px') + ';' +
+      'background:' + cols[i % cols.length] + ';' +
+      'left:' + x + 'vw';
+    c.appendChild(d);
+  }
+  setTimeout(() => c.innerHTML = '', 5500);
+}
+
+// ════════════════════════════════════════
+// FULLSCREEN
+// ════════════════════════════════════════
+function toggleFS() {
+  const btn = document.getElementById('btn-fs');
+  const el  = document.documentElement;
+  const inFS = document.fullscreenElement || document.webkitFullscreenElement;
+  if (!inFS) {
+    const req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+    if (req) {
+      req.call(el);
+      btn.textContent = '✕';
+      btn.title = 'Wyjdź z pełnego ekranu';
+    } else {
+      // iOS Safari fallback — hide status bar via scroll trick
+      window.scrollTo(0, 1);
+      btn.style.display = 'none';
+    }
+  } else {
+    const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen;
+    if (exit) exit.call(document);
+    btn.textContent = '⛶';
+    btn.title = 'Pełny ekran';
+  }
+}
+
+// Auto-hide fullscreen button after 4s of no interaction
+let fsHideTimer;
+function resetFsTimer() {
+  const btn = document.getElementById('btn-fs');
+  btn.style.opacity = '1';
+  clearTimeout(fsHideTimer);
+  fsHideTimer = setTimeout(() => { btn.style.opacity = '0.15'; }, 4000);
+}
+document.addEventListener('touchstart', resetFsTimer);
+document.addEventListener('click', resetFsTimer);
+resetFsTimer();
+
+// Listen for fullscreen change
+document.addEventListener('fullscreenchange', () => {
+  const btn = document.getElementById('btn-fs');
+  btn.textContent = document.fullscreenElement ? '✕' : '⛶';
+});
+document.addEventListener('webkitfullscreenchange', () => {
+  const btn = document.getElementById('btn-fs');
+  btn.textContent = document.webkitFullscreenElement ? '✕' : '⛶';
+});
+</script>
+
+</body>
+</html>
